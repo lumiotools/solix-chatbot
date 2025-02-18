@@ -41,7 +41,9 @@ export const POST = async (request: NextRequest) => {
       message: "Chatbot response",
       data: {
         content: data.answer,
-        sourcePages: data.sources.map((source: any) => Number(source.page) + 1),
+        sourcePages: data.sources.map(
+          (source: { page: string }) => Number(source.page) + 1
+        ),
       },
     });
   } catch (error) {

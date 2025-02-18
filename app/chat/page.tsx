@@ -178,7 +178,7 @@ export default function ChatPage() {
                       Welcome to Solix EDMS Assistant
                     </h3>
                     <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                      I'm here to help you with any questions about Solix
+                      I&apos;m here to help you with any questions about Solix
                       Enterprise Data Management Suite.
                     </p>
                   </div>
