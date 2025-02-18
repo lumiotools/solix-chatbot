@@ -51,6 +51,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [currentPdfPage, setCurrentPdfPage] = useState(1);
+  const [chatId, setChatId] = useState<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,6 +110,15 @@ export default function ChatPage() {
         },
       ]);
       setChatController(null);
+      setIsLoading(false);
+      await updateChatHistory([
+        ...newMessages,
+        {
+          role: "assistant",
+          content: data.data.content,
+          sources: data.data.sourcePages,
+        },
+      ]);
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -116,9 +126,28 @@ export default function ChatPage() {
     }
   };
 
+  // **Function to update chat history**
+  const updateChatHistory = async (updatedMessages: Message[]) => {
+    try {
+      const res = await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: chatId, messages: updatedMessages }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.data?.id) {
+        setChatId(data.data.id); // Store chat ID for future updates
+      }
+    } catch (err) {
+      console.error("Failed to update chat history:", err);
+    }
+  };
+
   const resetHistory = () => {
     setMessages([]);
     setInput("");
+    setChatId(null);
     if (chatController) {
       chatController.abort("Reset chat history");
       setChatController(null);
