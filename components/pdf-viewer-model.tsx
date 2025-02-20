@@ -13,8 +13,6 @@ import { useState } from "react";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
-console.log(pdfjs.version)
-
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PdfViewerModalProps {
@@ -42,8 +40,6 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     const { str } = textItem;
     if (!str) return str;
 
-    console.log(str, snippet);
-
     if (str.includes("<mark>") || str === " ") {
       return str;
     } else if (snippet.toLowerCase().includes(str.toLowerCase())) {
@@ -65,9 +61,6 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           <Document
             file={pdfUrl}
             onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={(error) => console.error(error)}
-            onLoadProgress={(progressData) => console.log(progressData)}
-            onLoadStart={() => console.log("Loading started")}
             className="w-fit"
           >
             <Page

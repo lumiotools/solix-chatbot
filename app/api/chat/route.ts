@@ -25,8 +25,6 @@ export const POST = async (request: NextRequest) => {
       data = data.properties;
     }
 
-    console.log(data["sources"]);
-
     if (!data.isSuccess) {
       return NextResponse.json({
         success: true,
