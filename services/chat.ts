@@ -36,8 +36,12 @@ export const ChatEngine = index.asChatEngine({
                     page: {
                       type: "string",
                     },
+                    snippet: {
+                      type: "string",
+                      description: "The exact paragraph snippet from the original source page, that helped in deriving the answer."
+                    }
                   },
-                  required: ["page"],
+                  required: ["page", "snippet"],
                   strict: true,
                 },
               },

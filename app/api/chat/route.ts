@@ -25,6 +25,8 @@ export const POST = async (request: NextRequest) => {
       data = data.properties;
     }
 
+    console.log(data["sources"]);
+
     if (!data.isSuccess) {
       return NextResponse.json({
         success: true,
@@ -41,8 +43,11 @@ export const POST = async (request: NextRequest) => {
       message: "Chatbot response",
       data: {
         content: data.answer,
-        sourcePages: data.sources.map(
-          (source: { page: string }) => Number(source.page) + 1
+        sources: data.sources.map(
+          (source: { page: string; snippet: string }) => ({
+            page: Number(source.page) + 1,
+            snippet: source.snippet,
+          })
         ),
       },
     });

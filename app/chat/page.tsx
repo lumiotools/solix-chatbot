@@ -19,16 +19,24 @@ import {
   User,
   Loader2,
   MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { PdfViewerModal } from "@/components/pdf-viewer-model";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
-  sources?: number[];
+  sources?: { page: number; snippet: string }[];
 };
 
 const EXAMPLE_QUESTIONS = [
@@ -37,9 +45,6 @@ const EXAMPLE_QUESTIONS = [
   "How does Solix EDMS forecast future data growth?",
   "What are the key features of Solix EDMS Data Validation?",
 ];
-
-// Replace this with your actual PDF URL
-const PDF_URL = "/manual.pdf";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -52,6 +57,12 @@ export default function ChatPage() {
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [currentPdfPage, setCurrentPdfPage] = useState(1);
   const [chatId, setChatId] = useState<string | null>(null);
+  const [currentSnippet, setCurrentSnippet] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
+
+  useEffect(() => {
+    setPdfUrl(window.location.origin + "/manual.pdf");
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,7 +117,7 @@ export default function ChatPage() {
         {
           role: "assistant",
           content: data.data.content,
-          sources: data.data.sourcePages,
+          sources: data.data.sources,
         },
       ]);
       setChatController(null);
@@ -116,7 +127,7 @@ export default function ChatPage() {
         {
           role: "assistant",
           content: data.data.content,
-          sources: data.data.sourcePages,
+          sources: data.data.sources,
         },
       ]);
     } catch (error) {
@@ -154,9 +165,15 @@ export default function ChatPage() {
     }
   };
 
-  const openPdfAtPage = (pageNumber: number) => {
+  const openPdfAtPage = (pageNumber: number, snippet: string) => {
     setCurrentPdfPage(pageNumber);
+    setCurrentSnippet(snippet);
     setIsPdfModalOpen(true);
+  };
+
+  const truncateSnippet = (snippet: string, maxLength = 100) => {
+    if (snippet.length <= maxLength) return snippet;
+    return snippet.slice(0, maxLength) + "...";
   };
 
   return (
@@ -267,21 +284,51 @@ export default function ChatPage() {
                         {message.role === "assistant" &&
                           message.sources &&
                           message.sources.length > 0 && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Sources:{" "}
-                              {message.sources.map((source, index) => (
-                                <span key={index}>
-                                  <button
-                                    onClick={() => openPdfAtPage(source)}
-                                    className="text-[#E31837] hover:underline"
-                                  >
-                                    Page {source}
-                                  </button>
-                                  {index < message.sources!.length - 1
-                                    ? ", "
-                                    : ""}
-                                </span>
-                              ))}
+                            <div className="text-xs text-gray-500 mt-2 space-y-2">
+                              <div className="flex items-center gap-1 font-semibold text-gray-600">
+                                <BookOpen className="w-4 h-4" />
+                                <span>Sources:</span>
+                              </div>
+                              <div className="grid grid-cols-1 gap-2">
+                                {message.sources.map((source, index) => (
+                                  <TooltipProvider key={index}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            openPdfAtPage(
+                                              source.page,
+                                              source.snippet
+                                            )
+                                          }
+                                          className="w-full justify-start text-left font-normal"
+                                        >
+                                          <Badge
+                                            variant="secondary"
+                                            className="mr-2"
+                                          >
+                                            Page {source.page}
+                                          </Badge>
+                                          {truncateSnippet(source.snippet, 50)}
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent
+                                        side="bottom"
+                                        className="max-w-md max-h-[40vh] overflow-y-auto p-4"
+                                      >
+                                        <ReactMarkdown
+                                          className="prose prose-sm max-w-none"
+                                          remarkPlugins={[remarkGfm]}
+                                        >
+                                          {source.snippet}
+                                        </ReactMarkdown>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ))}
+                              </div>
                             </div>
                           )}
                       </div>
@@ -347,8 +394,9 @@ export default function ChatPage() {
       <PdfViewerModal
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}
-        pdfUrl={PDF_URL}
+        pdfUrl={pdfUrl}
         pageNumber={currentPdfPage}
+        snippet={currentSnippet}
       />
     </div>
   );
